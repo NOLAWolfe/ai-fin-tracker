@@ -32,6 +32,7 @@ client = plaid_api.PlaidApi(api_client)
 INSTITUTION_ID = os.getenv('PLAID_INSTITUTION_ID')
 ACCESS_TOKEN = None
 PRODUCTS = [p.strip() for p in os.getenv('PLAID_PRODUCTS').split(',')]
+from plaid.model.accounts_get_request import AccountsGetRequest
 # --- Core Functionality ---
 
 def create_link_token():
@@ -50,8 +51,9 @@ def create_link_token():
     # print(f'  -> Public Token Created: {public_token}')
     exchange_response = client.item_public_token_exchange(exchange_request)
     
-    exchange_token = exchange_response['access_token']
-    print(f"  -> Exchange Token Created: {exchange_token}")
+    global ACCESS_TOKEN
+    ACCESS_TOKEN = exchange_response['access_token']
+    print(f"  -> Exchange Token Created: {ACCESS_TOKEN}")
   except Exception as e:
         print(f"Error Generating token: {e}")
         return None
@@ -78,7 +80,7 @@ def fetch_and_display_accounts(access_token):
         
         for account in accounts:
             balance = account['balances']['available'] if account['balances']['available'] else account['balances']['current']
-            print(f"  Account Name: {account['name']} ({account['subtype'].capitalize()})")
+            print(f"  Account Name: {account['name']} ({account['subtype'].value.capitalize()})")
             print(f"  Balance:      ${balance:,.2f}")
             print("---")
             
@@ -88,5 +90,5 @@ def fetch_and_display_accounts(access_token):
 
 if __name__ == '__main__':
     # Execute the three steps in order
-    token = create_link_token()
-    # fetch_and_display_accounts(token)
+    create_link_token()
+    fetch_and_display_accounts(ACCESS_TOKEN)
